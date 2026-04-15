@@ -7,9 +7,12 @@ public class User {
     private String middleName;
     private String lastName;
 
-    public User(String email, String password, String firstName, String middleName, String lastName) {
+    private String role;
+
+    public User(String email, String password, String role, String firstName, String middleName, String lastName) {
         this.email = email;
         this.password = password;
+        this.role = role;
         this.firstName = firstName;
         this.middleName = middleName;
         this.lastName = lastName;
@@ -33,5 +36,13 @@ public class User {
 
     public String getLastName() {
         return lastName;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

@@ -23,7 +23,6 @@ import com.example.codefestpractice.models.User;
 public class RegisterActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
-    private User user;
     private TextInputLayout tilFirstName, tilMiddleName, tilLastName, tilEmail, tilPassword;
     private TextInputEditText etFirstName, etMiddleName, etLastName, etEmail, etPassword;
 
@@ -46,14 +45,7 @@ public class RegisterActivity extends AppCompatActivity {
             }
         });
 
-        tvGoToLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-                startActivity(intent);
-            }
-        });
-
+        tvGoToLogin.setOnClickListener(v -> intentToLogin());
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -62,12 +54,23 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
+    private void intentToLogin() {
+        Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+        startActivity(intent);
+    }
+
     private void connectComponents() {
         dbHelper = new DatabaseHelper(this);
 
+        tilFirstName = findViewById(R.id.tilFirstName);
+        tilMiddleName = findViewById(R.id.tilMiddleName);
+        tilLastName = findViewById(R.id.tilLastName);
         tilEmail = findViewById(R.id.tilEmail);
         tilPassword = findViewById(R.id.tilPassword);
 
+        etFirstName = findViewById(R.id.etFirstName);
+        etMiddleName = findViewById(R.id.etMiddleName);
+        etLastName = findViewById(R.id.etLastName);
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
 
@@ -77,7 +80,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void validateRegister() {
-        boolean isvalid = true;
+        boolean isValid = true;
 
         String firstName = String.valueOf(etFirstName.getText()).trim();
         String middleName = String.valueOf(etMiddleName.getText()).trim();
@@ -86,47 +89,56 @@ public class RegisterActivity extends AppCompatActivity {
         String email = String.valueOf(etEmail.getText()).trim();
         String password = String.valueOf(etPassword.getText()).trim();
 
+        tilFirstName.setError(null);
+        tilMiddleName.setError(null);
+        tilLastName.setError(null);
         tilEmail.setError(null);
         tilPassword.setError(null);
 
         if (firstName.isEmpty()) {
             tilFirstName.setError("FirstName is required");
-            isvalid = false;
+            isValid = false;
         }
 
         if (lastName.isEmpty()) {
             tilLastName.setError("LastName is required");
-            isvalid = false;
+            isValid = false;
         }
 
 
         if (email.isEmpty()) {
             tilEmail.setError("Email is required");
-            isvalid = false;
+            isValid = false;
         } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             tilEmail.setError("Please enter a valid email address");
-            isvalid = false;
+            isValid = false;
+        } else {
+            boolean emailExists = dbHelper.checkEmailExists(email);
+            if (emailExists) {
+                tilEmail.setError("This email is already registered");
+                isValid = false;
+            }
         }
 
         if (password.isEmpty()) {
             tilPassword.setError("Password is required");
-            isvalid = false;
+            isValid = false;
         } else if (password.length() < 6) {
             tilPassword.setError("Password must be at least 6 characters");
-            isvalid = false;
+            isValid = false;
         }
 
 
-        if (isvalid) {
-            user = new User(firstName, middleName, lastName, email, password);
+        if (isValid) {
+            User user = new User(email, password, "Customer", firstName, middleName, lastName);
             boolean isInserted = dbHelper.insertUser(user);
 
             if (isInserted) {
                 Toast.makeText(RegisterActivity.this, "Registration Successful", Toast.LENGTH_LONG).show();
-                Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-                startActivity(intent);
-
+                intentToLogin();
                 finish();
+            } else {
+                Toast.makeText(RegisterActivity.this, "System Error: Could not save user.", Toast.LENGTH_LONG).show();
             }
         }
 

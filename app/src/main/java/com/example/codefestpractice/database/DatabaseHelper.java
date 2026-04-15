@@ -27,11 +27,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 """
                           CREATE TABLE IF NOT EXISTS %s (
                             ID INTEGER PRIMARY KEY AUTOINCREMENT,
-                            FIRSTNAME TEXT,
-                            MIDDLENAME TEXT,
-                            LASTNAME TEXT,
-                            EMAIL TEXT,
-                            PASSWORD TEXT
+                            FIRSTNAME TEXT NOT NULL,
+                            MIDDLENAME TEXT NULL,
+                            LASTNAME TEXT NOT NULL,
+                            EMAIL TEXT UNIQUE NOT NULL,
+                            PASSWORD TEXT NOT NULL,
+                            ROLE TEXT NOT NULL CHECK (ROLE IN('customer', 'cashier')),
+                            CREATED_AT TEXT DEFAULT (datetime('now', 'localtime'))
                         )
                         """, TABLE_USERS);
 
@@ -40,9 +42,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 """
                         CREATE TABLE IF NOT EXISTS %s (
                             ID INTEGER PRIMARY KEY AUTOINCREMENT,
-                            NAME TEXT,
-                            PRICE REAL,
-                            IMAGE_RES INTEGER
+                            NAME TEXT NOT NULL,
+                            PRICE REAL NOT NULL,
+                            IMAGE_RES INTEGER NULL
                         )
                         """, TABLE_PRODUCTS);
 
@@ -77,15 +79,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return password;
     }
 
-    public boolean checkUserCredentials(String email, String password) {
+    public boolean checkEmailExists(String email) {
         SQLiteDatabase db = this.getReadableDatabase();
 
-        String hashedPassword = hashPassword(password);
-
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_USERS + " WHERE EMAIL = ? AND PASSWORD = ?", new String[]{email, hashedPassword});
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_USERS + " WHERE EMAIL =?", new String[]{email});
         boolean exists = cursor.getCount() > 0;
         cursor.close();
         return exists;
+    }
+
+    public User authenticateAndGetUser(String email, String password) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String hashedPassword = hashPassword(password);
+
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_USERS + " WHERE EMAIL = ? AND PASSWORD = ?", new String[]{email, hashedPassword});
+
+        User loggedInUser = null;
+
+        if (cursor.moveToFirst()) {
+            String firstName = cursor.getString(cursor.getColumnIndexOrThrow("FIRSTNAME"));
+            String middleName = cursor.getString(cursor.getColumnIndexOrThrow("MIDDLENAME"));
+            String lastName = cursor.getString(cursor.getColumnIndexOrThrow("LASTNAME"));
+            String dbEmail = cursor.getString(cursor.getColumnIndexOrThrow("EMAIL"));
+            String dbPassword = cursor.getString(cursor.getColumnIndexOrThrow("PASSWORD"));
+            String role = cursor.getString(cursor.getColumnIndexOrThrow("ROLE"));
+
+            loggedInUser = new User(dbEmail, dbPassword, role, firstName, middleName, lastName);
+
+            loggedInUser.setRole(role);
+        }
+
+        cursor.close();
+        return loggedInUser;
     }
 
     public boolean insertUser(User user) {
@@ -99,6 +124,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put("EMAIL", user.getEmail());
         String hashedPassword = hashPassword(user.getPassword());
         contentValues.put("PASSWORD", hashedPassword);
+
+        contentValues.put("ROLE", user.getRole());
 
         long result = db.insert(TABLE_USERS, null, contentValues);
         return result != -1;
