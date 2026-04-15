@@ -13,6 +13,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.codefestpractice.models.User;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -101,20 +102,33 @@ public class LoginActivity extends AppCompatActivity {
 
 
         if (isValid) {
-            boolean isExist = dbHelper.checkUserCredentials(email, password);
+            User loggedInUser = dbHelper.authenticateAndGetUser(email, password);
 
-            if (isExist) {
-                Toast.makeText(LoginActivity.this, "Login Successfully", Toast.LENGTH_LONG).show();
-                performLoginAction();
+            if (loggedInUser != null) {
+                Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_LONG).show();
+                performLoginAction(loggedInUser);
             } else {
-                Toast.makeText(LoginActivity.this, "Invalid email or password", Toast.LENGTH_LONG).show();
+                Toast.makeText(LoginActivity.this, "Invalid email or password", Toast.LENGTH_LONG);
             }
+
         }
     }
 
-    private void performLoginAction() {
-        Intent intent = new Intent(LoginActivity.this, PosActivity.class);
+    private void performLoginAction(User user) {
+        SessionManager.getInstance().loginUser(user);
+
+        Intent intent;
+
+        if ("cashier".equalsIgnoreCase(user.getRole())) {
+            intent = new Intent(LoginActivity.this, PosActivity.class);
+        } else {
+            // intent = new Intent(LoginActivity.this,CustomerActivity.class);
+            intent = new Intent(LoginActivity.this, PosActivity.class);
+        }
+
         startActivity(intent);
         finish();
     }
+
+
 }

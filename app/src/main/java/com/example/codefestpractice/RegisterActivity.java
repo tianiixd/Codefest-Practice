@@ -105,7 +105,6 @@ public class RegisterActivity extends AppCompatActivity {
             isValid = false;
         }
 
-
         if (email.isEmpty()) {
             tilEmail.setError("Email is required");
             isValid = false;
