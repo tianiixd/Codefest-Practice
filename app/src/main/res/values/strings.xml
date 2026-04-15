@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Ice Kwim</string>
+    <string name="login">Login</string>
+    <string name="enter_email">Enter Email</string>
+    <string name="enter_password">Enter Password</string>
+    <string name="logo_image">Logo Image</string>
+    <string name="logintv">Login</string>
+    <string name="register">Register</string>
+    <string name="tvRegister" type="id">tvRegister</string>
+    <string name="tvRequirements" type="id">tvRequirements</string>
+    <string name="already_have_an_account_login">Already have an account? Login</string>
+    <string name="enter_firstname">Enter FirstName</string>
+    <string name="enter_middlename">Enter MiddleName</string>
+    <string name="enter_lastname">Enter LastName</string>
+</resources>
